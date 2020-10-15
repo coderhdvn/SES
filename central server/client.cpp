@@ -5,13 +5,15 @@
 #include <arpa/inet.h> 
 #include <unistd.h> 
 #include <string.h> 
-#define PORT 8080 
+#include <stdlib.h>
+#include <time.h>
+#define SERVER_PORT 8888 
    
 int main(int argc, char const *argv[]) 
 { 
     int sock = 0, valread; 
     struct sockaddr_in serv_addr; 
-    const char *hello = "Hello from client"; 
+    //char *hello = "****Hello from client"; 
     char buffer[1024] = {0}; 
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) 
     { 
@@ -20,7 +22,7 @@ int main(int argc, char const *argv[])
     } 
    
     serv_addr.sin_family = AF_INET; 
-    serv_addr.sin_port = htons(PORT); 
+    serv_addr.sin_port = htons(SERVER_PORT); 
        
     // Convert IPv4 and IPv6 addresses from text to binary form 
     if(inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr)<=0)  
@@ -33,11 +35,22 @@ int main(int argc, char const *argv[])
     { 
         printf("\nConnection Failed \n"); 
         return -1; 
-    } 
-    send(sock , hello , strlen(hello) , 0 ); 
+    }
+    srand (time(NULL));
+    int r = rand() % 10000;
+    char * b = (char *)malloc(10);
+    sprintf(b,"%d",getpid());
+     
+    send(sock , b , strlen(b) , 0 ); 
+    //valread = read( sock , buffer, 1024);
     printf("Hello message sent\n"); 
-    valread = read( sock , buffer, 1024); 
-    printf("%s\n",buffer ); 
+    //valread = read( sock , buffer, 1024); 
+     
+    while (1)
+    {
+        valread = read( sock , buffer, 1024);
+        printf("%s\n",buffer );
+    }
     return 0; 
 } 
 
