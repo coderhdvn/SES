@@ -10,77 +10,7 @@
 #include <sys/socket.h> 
 #include <netinet/in.h> 
 #include <sys/time.h> //FD_SET, FD_ISSET, FD_ZERO macros 
-	
-#define TRUE 1 
-#define FALSE 0 
-#define PORT 8888 
-
-int opt = TRUE; 
-	int master_socket , addrlen , new_socket , client_socket[30] , 
-		max_clients = 30 , activity, i , valread , sd; 
-	int max_sd; 
-	struct sockaddr_in address; 
-		
-	char buffer[1025]; //data buffer of 1K 
-
-	int no_connected_sock =0;
-	
-	int port_table[100];	
-
-	//set of socket descriptors 
-	fd_set readfds; 
-		
-	//a message 
-	char *message = "ECHO Daemon v1.0 \r\n"; 
-
-void build_server()
-{
-	//initialise all client_socket[] to 0 so not checked 
-	for (i = 0; i < max_clients; i++) 
-	{ 
-		client_socket[i] = 0; 
-	} 
-		
-	//create a master socket 
-	if( (master_socket = socket(AF_INET , SOCK_STREAM , 0)) == 0) 
-	{ 
-		perror("socket failed"); 
-		exit(EXIT_FAILURE); 
-	} 
-	
-	//set master socket to allow multiple connections , 
-	//this is just a good habit, it will work without this 
-	if( setsockopt(master_socket, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, 
-		sizeof(opt)) < 0 ) 
-	{ 
-		perror("setsockopt"); 
-		exit(EXIT_FAILURE); 
-	} 
-	
-	//type of socket created 
-	address.sin_family = AF_INET; 
-	address.sin_addr.s_addr = INADDR_ANY; 
-	address.sin_port = htons( PORT ); 
-		
-	//bind the socket to localhost port 8888 
-	if (bind(master_socket, (struct sockaddr *)&address, sizeof(address))<0) 
-	{ 
-		perror("bind failed"); 
-		exit(EXIT_FAILURE); 
-	} 
-	printf("Listener on port %d \n", PORT); 
-		
-	//try to specify maximum of 3 pending connections for the master socket 
-	if (listen(master_socket, 3) < 0) 
-	{ 
-		perror("listen"); 
-		exit(EXIT_FAILURE); 
-	} 
-		
-	//accept the incoming connection 
-	addrlen = sizeof(address); 
-	puts("Waiting for connections ...");
-}
+#include "server.h"
 
 int main(int argc , char *argv[]) 
 { 
@@ -143,7 +73,7 @@ int main(int argc , char *argv[])
 			//} 
 
 			read(new_socket, buffer, 1024); 
-			
+			port_table[no_connected_sock]=buffer[3];		
 			puts(buffer); 
 
 
@@ -198,7 +128,7 @@ int main(int argc , char *argv[])
 			} 
 		} 
 	}
-	sprintf(buffer, "123 456 789"); 
+	sprintf(buffer,"%d %d %d", port_table[0],port_table[1],port_table[2]); 
 	for (i = 0; i < max_clients; i++) 
 	{
 		if (client_socket[i]!=0)

@@ -8,8 +8,7 @@
 #include <sys/socket.h> 
 #include <netinet/in.h> 
 #include <sys/time.h> //FD_SET, FD_ISSET, FD_ZERO macros 
-
-
+	
 #define TRUE 1 
 #define FALSE 0 
 #define PORT 8888 
@@ -32,7 +31,7 @@ int opt = TRUE;
 	//a message 
 	char *message = "ECHO Daemon v1.0 \r\n"; 
 
-void build_server()
+int build_server(int port)
 {
 	//initialise all client_socket[] to 0 so not checked 
 	for (i = 0; i < max_clients; i++) 
@@ -59,25 +58,22 @@ void build_server()
 	//type of socket created 
 	address.sin_family = AF_INET; 
 	address.sin_addr.s_addr = INADDR_ANY; 
-	address.sin_port = htons( PORT ); 
+	address.sin_port = htons( port ); 
 		
 	//bind the socket to localhost port 8888 
 	if (bind(master_socket, (struct sockaddr *)&address, sizeof(address))<0) 
 	{ 
-		perror("bind failed"); 
-		exit(EXIT_FAILURE); 
+		perror("bind failed");
+        return 0; 
+		//exit(EXIT_FAILURE); 
 	} 
-	printf("Listener on port %d \n", PORT); 
-		
-	//try to specify maximum of 3 pending connections for the master socket 
-	if (listen(master_socket, 3) < 0) 
-	{ 
-		perror("listen"); 
-		exit(EXIT_FAILURE); 
-	} 
-		
-	//accept the incoming connection 
-	addrlen = sizeof(address); 
-	puts("Waiting for connections ...");
+	//printf("Listener on port %d \n", PORT); 
+    return 1;
 }
 
+int main()
+{
+
+    printf("port %d is %d available\n",8888, build_server(8888));
+    
+}
