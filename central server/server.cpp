@@ -14,10 +14,8 @@
 #define TRUE 1 
 #define FALSE 0 
 #define PORT 8888 
-	
-int main(int argc , char *argv[]) 
-{ 
-	int opt = TRUE; 
+
+int opt = TRUE; 
 	int master_socket , addrlen , new_socket , client_socket[30] , 
 		max_clients = 30 , activity, i , valread , sd; 
 	int max_sd; 
@@ -26,13 +24,17 @@ int main(int argc , char *argv[])
 	char buffer[1025]; //data buffer of 1K 
 
 	int no_connected_sock =0;
+	
+	int port_table[100];	
 
 	//set of socket descriptors 
 	fd_set readfds; 
 		
 	//a message 
 	char *message = "ECHO Daemon v1.0 \r\n"; 
-	
+
+void build_server()
+{
 	//initialise all client_socket[] to 0 so not checked 
 	for (i = 0; i < max_clients; i++) 
 	{ 
@@ -77,9 +79,16 @@ int main(int argc , char *argv[])
 		
 	//accept the incoming connection 
 	addrlen = sizeof(address); 
-	puts("Waiting for connections ..."); 
+	puts("Waiting for connections ...");
+}
+
+int main(int argc , char *argv[]) 
+{ 
+	
+	build_server();
+	 
 		
-	while(TRUE) 
+	while(no_connected_sock < 3) 
 	{ 
 		//clear the socket set 
 		FD_ZERO(&readfds); 
@@ -188,7 +197,14 @@ int main(int argc , char *argv[])
 				} 
 			} 
 		} 
-	} 
-		
+	}
+	sprintf(buffer, "123 456 789"); 
+	for (i = 0; i < max_clients; i++) 
+	{
+		if (client_socket[i]!=0)
+		{
+			send(client_socket[i] , buffer , strlen(buffer) , 0 );
+		}	 
+	}		
 	return 0; 
 } 

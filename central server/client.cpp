@@ -46,7 +46,7 @@ int main(int argc, char const *argv[])
     printf("Hello message sent\n"); 
     //valread = read( sock , buffer, 1024); 
      
-    while (1)
+    //while (1)
     {
         valread = read( sock , buffer, 1024);
         printf("%s\n",buffer );
