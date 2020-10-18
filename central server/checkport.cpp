@@ -31,13 +31,8 @@ int opt = TRUE;
 	//a message 
 	char *message = "ECHO Daemon v1.0 \r\n"; 
 
-int build_server(int port)
+void init()
 {
-	//initialise all client_socket[] to 0 so not checked 
-	for (i = 0; i < max_clients; i++) 
-	{ 
-		client_socket[i] = 0; 
-	} 
 		
 	//create a master socket 
 	if( (master_socket = socket(AF_INET , SOCK_STREAM , 0)) == 0) 
@@ -58,6 +53,13 @@ int build_server(int port)
 	//type of socket created 
 	address.sin_family = AF_INET; 
 	address.sin_addr.s_addr = INADDR_ANY; 
+	
+}
+
+int bind_port(int port)
+{
+	init();
+	
 	address.sin_port = htons( port ); 
 		
 	//bind the socket to localhost port 8888 
@@ -69,6 +71,18 @@ int build_server(int port)
 	} 
 	//printf("Listener on port %d \n", PORT); 
     return 1;
+}
+
+int rand_port()
+{
+	return rand()%10000;
+}
+
+void build_server()
+{
+	int random_port = rand_port();
+	while (bind(random_port)==0){}
+
 }
 
 int main()

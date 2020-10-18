@@ -14,6 +14,8 @@
 #define FALSE 0 
 #define PORT 8888 
 
+int no_processes  = 5;
+
 int opt = TRUE; 
 	int master_socket , addrlen , new_socket , client_socket[30] , 
 		max_clients = 30 , activity, i , valread , sd; 

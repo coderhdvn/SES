@@ -18,7 +18,7 @@ int main(int argc , char *argv[])
 	build_server();
 	 
 		
-	while(no_connected_sock < 3) 
+	while(no_connected_sock < no_processes) 
 	{ 
 		//clear the socket set 
 		FD_ZERO(&readfds); 
@@ -73,8 +73,11 @@ int main(int argc , char *argv[])
 			//} 
 
 			read(new_socket, buffer, 1024); 
-			port_table[no_connected_sock]=buffer[3];		
-			puts(buffer); 
+			puts("***");
+			puts(buffer);
+			puts("***");
+			sscanf(buffer,"%d",&port_table[no_connected_sock]);		
+			 
 
 
 			//add new socket to array of sockets 
@@ -112,7 +115,7 @@ int main(int argc , char *argv[])
 						inet_ntoa(address.sin_addr) , ntohs(address.sin_port)); 
 						
 					//Close the socket and mark as 0 in list for reuse 
-					no_connected_sock--;
+					//no_connected_sock--;
 					close( sd ); 
 					client_socket[i] = 0; 
 				} 
@@ -128,7 +131,13 @@ int main(int argc , char *argv[])
 			} 
 		} 
 	}
-	sprintf(buffer,"%d %d %d", port_table[0],port_table[1],port_table[2]); 
+
+	buffer[0]=0;
+	for (i=0;i<no_processes;i++)
+	{
+		sprintf(buffer,"%s %d",buffer, port_table[i]);
+	}
+	 
 	for (i = 0; i < max_clients; i++) 
 	{
 		if (client_socket[i]!=0)
