@@ -135,7 +135,7 @@ int main(int argc , char *argv[])
 	buffer[0]=0;
 	for (i=0;i<no_processes;i++)
 	{
-		sprintf(buffer,"%s %d",buffer, port_table[i]);
+		sprintf(buffer,"%s%d#",buffer, port_table[i]);
 	}
 	 
 	for (i = 0; i < max_clients; i++) 
