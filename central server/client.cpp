@@ -19,38 +19,30 @@
 struct sockaddr_in address; 
 int opt = TRUE;
 int master_socket;
-int port;
+int my_port;
 int peers[20];
 
 void init()
 {
-		
-	//create a master socket 
 	if( (master_socket = socket(AF_INET , SOCK_STREAM , 0)) == 0) 
 	{ 
 		perror("socket failed"); 
 		exit(EXIT_FAILURE); 
 	} 
 	
-	//set master socket to allow multiple connections , 
-	//this is just a good habit, it will work without this 
 	if( setsockopt(master_socket, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, 
-		sizeof(opt)) < 0 ) 
-	{ 
+		sizeof(opt)) < 0 ) { 
 		perror("setsockopt"); 
 		exit(EXIT_FAILURE); 
 	} 
-	
-	//type of socket created 
+	 
 	address.sin_family = AF_INET; 
 	address.sin_addr.s_addr = INADDR_ANY; 
 	
 }
 
-int bind_port(int port)
-{
-	init();
-	address.sin_port = htons( port ); 
+int bind_port(int _port){
+	address.sin_port = htons( _port ); 
 	if (bind(master_socket, (struct sockaddr *)&address, sizeof(address))<0) { 
         return 0; 
 	} 
@@ -62,8 +54,16 @@ int rand_port(){
 }
 
 void build_server(){
-    port = rand_port();
-	while (bind_port(port)==0){}
+    init();
+    my_port = rand_port();
+
+    while (bind_port(my_port)==0){
+        my_port = rand_port();
+    }
+
+    if (listen(master_socket, 4)<0){
+        printf("error at listening");
+    }
 
 }
 
@@ -74,8 +74,7 @@ char buffer[1024] = {0};
 
 int join()
 {
-    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) 
-    { 
+    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) { 
         printf("\n Socket creation error \n"); 
         return -1; 
     } 
@@ -95,8 +94,6 @@ int join()
 
 int no_peers = 0;
 void get_peer_info(char * buffer){
-
-    printf("str=%s \n",buffer);
     int formmer = 0;
     for ( int i = 0; i < strlen( buffer ) ; i++){
         if (buffer[i]=='#'){
@@ -111,43 +108,62 @@ void get_peer_info(char * buffer){
     }
 }
 
+void connect_peers();
+
 void *server_listen(void * vargp)
 {
-    printf("running");
-    while (1)
-    {
+    puts("my port's listening\n");
+    int count = 0;
+    while (count < no_peers-1){
         int addrlen = sizeof(address);
-        int client_socket = accept(master_socket, 
-        (struct sockaddr *)&address, (socklen_t*)&addrlen);
-        printf("1 process connecting");
+        int client_socket = 
+        accept(master_socket, (struct sockaddr *)&address, (socklen_t*)&addrlen);
+        puts("1 process connecting");
+        count++;
+    }
+}
+
+void connect_peers(){
+    
+    for (int i = 0; i < no_peers; i++){
+        if (peers[i] != my_port){
+            int tsock = socket(AF_INET, SOCK_STREAM, 0);
+            struct sockaddr_in taddress;
+            taddress.sin_family = AF_INET;
+            taddress.sin_port = htons(peers[i]);
+            if (inet_pton(AF_INET, "127.0.0.1", &taddress.sin_addr) <= 0){
+                printf("\nInvalid address/ Address not supported \n");
+            }
+            if (connect(tsock, (struct sockaddr *)&taddress, sizeof(taddress)) < 0){
+                printf("\nConnection Failed \n");
+            }
+            puts("connect to peer\n");
+        }
     }
 }
 
 int main(int argc, char const *argv[]) { 
     
-    if ( join()==-1 )
-    {
+    if ( join()==-1 ){
         return -1;
     }
     srand (time(NULL));
     char * b = (char *)malloc(10);
     build_server();
+
+    sprintf(b,"%d",my_port);
+    send(sock , b , strlen(b) , 0 );
     
-    listen(master_socket, 20);
-    
+    valread = read( sock , buffer, 1024);
+    puts("recived info\n");
+
+    get_peer_info(buffer);
+
     pthread_t thread_id; 
     pthread_create(&thread_id, NULL, server_listen, NULL); 
-    
-    printf("server is listening");
 
-    sprintf(b,"%d",port);
-    send(sock , b , strlen(b) , 0 );
+    connect_peers();
 
-    printf("Hello message sent\n"); 
-    valread = read( sock , buffer, 1024);
-    get_peer_info(buffer);
-    
-    pthread_join(thread_id, NULL); 
-    return 0; 
+    pthread_join(thread_id, NULL);     
 } 
 
