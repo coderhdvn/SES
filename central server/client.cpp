@@ -110,6 +110,14 @@ void get_peer_info(char * buffer){
 
 void connect_peers();
 
+void * handle_message(void * vargp)
+{
+    int  * fd = (int *) vargp;
+    char * buf = (char *) malloc(30);
+    recv(*fd, buf ,30,true);
+    puts(buf);
+}
+
 void *server_listen(void * vargp)
 {
     puts("my port's listening\n");
@@ -120,6 +128,9 @@ void *server_listen(void * vargp)
         accept(master_socket, (struct sockaddr *)&address, (socklen_t*)&addrlen);
         puts("1 process connecting");
         count++;
+        pthread_t _id; 
+        pthread_create(&_id, NULL, handle_message, (void *)&client_socket);
+        pthread_join(_id, NULL); 
     }
 }
 
@@ -137,6 +148,7 @@ void connect_peers(){
             if (connect(tsock, (struct sockaddr *)&taddress, sizeof(taddress)) < 0){
                 printf("\nConnection Failed \n");
             }
+            send(tsock, "abccc",5,true);
             puts("connect to peer\n");
         }
     }
