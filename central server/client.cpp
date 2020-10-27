@@ -113,43 +113,59 @@ void connect_peers();
 void * handle_message(void * vargp)
 {
     int  * fd = (int *) vargp;
-    char * buf = (char *) malloc(30);
-    recv(*fd, buf ,30,true);
-    puts(buf);
+    char * buf = (char *)malloc(30);
+    read(*fd, buf ,30);
+    printf("recive:%s\n", buf);
 }
 
 void *server_listen(void * vargp)
 {
     puts("my port's listening\n");
     int count = 0;
+    pthread_t thread_id[10];
+    int client_socket[10];
     while (count < no_peers-1){
         int addrlen = sizeof(address);
-        int client_socket = 
+        client_socket[count] = 
         accept(master_socket, (struct sockaddr *)&address, (socklen_t*)&addrlen);
         puts("1 process connecting");
+        pthread_create(&thread_id[count], NULL, handle_message, (void *)&client_socket[count]);
         count++;
-        pthread_t _id; 
-        pthread_create(&_id, NULL, handle_message, (void *)&client_socket);
-        pthread_join(_id, NULL); 
+    }
+    for (int i=0;i<count;i++){
+        pthread_join(thread_id[i], NULL);
     }
 }
 
+void * send_message_thread(void * vargp){
+    char * buf = (char *) malloc(2);
+    int *socket = (int *)vargp;
+    sprintf(buf,"%d%d",*socket,my_port);
+    sleep(my_port%10);
+    puts("sended");
+    send(*socket, buf, strlen(buf) , 0);
+}
+pthread_t threads[20];
+int sk[20];
 void connect_peers(){
-    
     for (int i = 0; i < no_peers; i++){
         if (peers[i] != my_port){
-            int tsock = socket(AF_INET, SOCK_STREAM, 0);
+            sk[i] = socket(AF_INET, SOCK_STREAM, 0);
             struct sockaddr_in taddress;
             taddress.sin_family = AF_INET;
             taddress.sin_port = htons(peers[i]);
             if (inet_pton(AF_INET, "127.0.0.1", &taddress.sin_addr) <= 0){
                 printf("\nInvalid address/ Address not supported \n");
             }
-            if (connect(tsock, (struct sockaddr *)&taddress, sizeof(taddress)) < 0){
+            if (connect(sk[i], (struct sockaddr *)&taddress, sizeof(taddress)) < 0){
                 printf("\nConnection Failed \n");
             }
-            send(tsock, "abccc",5,true);
-            puts("connect to peer\n");
+            pthread_create(&threads[i], NULL, send_message_thread, (void *)&sk[i]);
+        }
+    }
+    for (int i=0;i<no_peers;i++){
+        if (peers[i]!=my_port){
+            pthread_join(threads[i],NULL);
         }
     }
 }
@@ -159,6 +175,7 @@ int main(int argc, char const *argv[]) {
     if ( join()==-1 ){
         return -1;
     }
+    puts("[Process started]");
     srand (time(NULL));
     char * b = (char *)malloc(10);
     build_server();
@@ -167,7 +184,6 @@ int main(int argc, char const *argv[]) {
     send(sock , b , strlen(b) , 0 );
     
     valread = read( sock , buffer, 1024);
-    puts("recived info\n");
 
     get_peer_info(buffer);
 

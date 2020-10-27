@@ -14,7 +14,7 @@
 #define FALSE 0 
 #define PORT 8888 
 
-int no_processes  = 2;
+int no_processes  = 3;
 
 int opt = TRUE; 
 	int master_socket , addrlen , new_socket , client_socket[30] , 
