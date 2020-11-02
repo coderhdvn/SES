@@ -1,4 +1,4 @@
-CC=gcc
+CC=g++
 
 server: server.cpp server.h
 	$(CC)  server.cpp -o server

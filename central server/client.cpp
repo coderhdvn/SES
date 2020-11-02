@@ -11,6 +11,7 @@
 #include <sys/time.h> //FD_SET, FD_ISSET, FD_ZERO macros 
 #include <time.h>
 #include <pthread.h> 
+#include "ProcessData.h"
 
 #define TRUE 1 
 #define FALSE 0
@@ -113,9 +114,11 @@ void connect_peers();
 void * handle_message(void * vargp)
 {
     int  * fd = (int *) vargp;
-    char * buf = (char *)malloc(30);
+    int * buf = (int *)malloc(30);
     read(*fd, buf ,30);
-    printf("recive:%s\n", buf);
+    for (int i=0; i< 10; i++){
+        printf(":%d:", buf[i]);
+    }
 }
 
 void *server_listen(void * vargp)
@@ -138,12 +141,17 @@ void *server_listen(void * vargp)
 }
 
 void * send_message_thread(void * vargp){
+    vector<Tuple> vp;
+    Tuple tp= newTuple(1,3);
+    vp.push_back(newTuple(1,3));
+    int size=0;
+    int * b = (int *)VPtobtyes(vp, size);
     char * buf = (char *) malloc(2);
     int *socket = (int *)vargp;
     sprintf(buf,"%d%d",*socket,my_port);
     sleep(my_port%10);
     puts("sended");
-    send(*socket, buf, strlen(buf) , 0);
+    send(*socket, b, size*4 , 0);
 }
 pthread_t threads[20];
 int sk[20];
