@@ -116,8 +116,10 @@ void * handle_message(void * vargp)
     int  * fd = (int *) vargp;
     int * buf = (int *)malloc(30);
     read(*fd, buf ,30);
-    for (int i=0; i< 10; i++){
-        printf(":%d:", buf[i]);
+    vector<Tuple> VP = bytestoVP(buf, no_peers);
+    printf("size of VPm = %d \n", VP.size());
+    for (int i=0; i<VP.size(); i++){
+        printTuple(VP.at(i));
     }
 }
 
@@ -140,17 +142,15 @@ void *server_listen(void * vargp)
     }
 }
 
+vector<Tuple> vp;
 void * send_message_thread(void * vargp){
-    vector<Tuple> vp;
-    Tuple tp= newTuple(1,3);
-    vp.push_back(newTuple(1,3));
+    vp.clear();
+    vp.push_back(newTuple( my_port ,no_peers));
     int size=0;
-    int * b = (int *)VPtobtyes(vp, size);
-    char * buf = (char *) malloc(2);
+    int * b = (int *)VPtobtyes(vp, size,1);
     int *socket = (int *)vargp;
-    sprintf(buf,"%d%d",*socket,my_port);
     sleep(my_port%10);
-    puts("sended");
+    printf("sent\n");
     send(*socket, b, size*4 , 0);
 }
 pthread_t threads[20];
