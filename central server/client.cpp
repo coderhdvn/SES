@@ -20,8 +20,10 @@
 struct sockaddr_in address; 
 int opt = TRUE;
 int master_socket;
-int my_port;
+int my_port, my_pos;
 int peers[20];
+vector<Tuple> VP;
+vector<int> tm;
 
 void init()
 {
@@ -142,16 +144,15 @@ void *server_listen(void * vargp)
     }
 }
 
-vector<Tuple> vp;
+
 void * send_message_thread(void * vargp){
-    vp.clear();
-    vp.push_back(newTuple( my_port ,no_peers));
     int size=0;
-    int * b = (int *)VPtobtyes(vp, size,1);
+    int * b = (int *)VPtobtyes(VP, size,1);
     int *socket = (int *)vargp;
     sleep(my_port%10);
     printf("sent\n");
     send(*socket, b, size*4 , 0);
+    updateVP();
 }
 pthread_t threads[20];
 int sk[20];
@@ -169,6 +170,8 @@ void connect_peers(){
                 printf("\nConnection Failed \n");
             }
             pthread_create(&threads[i], NULL, send_message_thread, (void *)&sk[i]);
+        }else{
+            my_pos= i;
         }
     }
     for (int i=0;i<no_peers;i++){
@@ -183,6 +186,7 @@ int main(int argc, char const *argv[]) {
     if ( join()==-1 ){
         return -1;
     }
+
     puts("[Process started]");
     srand (time(NULL));
     char * b = (char *)malloc(10);
@@ -198,8 +202,12 @@ int main(int argc, char const *argv[]) {
     pthread_t thread_id; 
     pthread_create(&thread_id, NULL, server_listen, NULL); 
 
+    VP.push_back(newTuple(my_port, no_peers));
+    tm = initTm(no_peers); 
     connect_peers();
 
     pthread_join(thread_id, NULL);     
 } 
 
+// TODO: chen message vao sentbuffer, chen timestamp vao sentbuffer
+// them ham so sanh vector

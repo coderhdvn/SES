@@ -20,17 +20,28 @@ struct Tuple{
 
 struct Message{
     char s[100];
-    int timestamp;
+    vector<int> timestamp;
     vector<Tuple> VP;
 };
 Tuple newTuple(int port, int n){
     Tuple res;
     res.P.port = port;
     for (int i=0; i< n; i++){
-        res.T.push_back(rand()%30);
+        res.T.push_back(0);
+    }
+    printf("port = %d\n", port);
+    return res;
+}
+
+vector<int> initTm(int n){
+    vector<int> res;
+    for (int i=0;i < n; i++){
+        res.push_back(0);
     }
     return res;
 }
+
+vector<Message> MessageBuffer;
 
 void * VPtobtyes(vector<Tuple> vp, int & n, int timestamp){
     int * arr = (int *)malloc(100);
@@ -71,10 +82,55 @@ vector<Tuple> bytestoVP(void * byte, int no_peers){
     return res;
 }
 
-void printTuple(Tuple tuple){
-    printf("Process = %d\nVector= ", tuple.P.port);
-    for (int i=0; i<tuple.T.size(); i++){
-        printf("%d, ", tuple.T.at(i));
+void printTimeStamp(vector<int> vt){
+    for (int i=0; i<vt.size(); i++){
+        printf("%d, ", vt.at(i));
     }
     printf("\n");
+}
+
+void printTuple(Tuple tuple){
+    printf("Process = %d\nVector= ", tuple.P.port);
+    printTimeStamp(tuple.T);
+}
+
+void deliver(Message m, vector<int> my_timestamp, int my_pos){
+    for (int i=0; i< my_timestamp.size(); i++){
+        my_timestamp.at(i) = max<int>(my_timestamp.at(i), m.timestamp.at(i));
+    }
+    my_timestamp.at(my_pos) = my_timestamp.at(my_pos) +1;
+    printTimeStamp(m.timestamp);
+}
+
+void buffering(Message m){
+    MessageBuffer.push_back(m);
+}
+
+void updateVP(){
+
+}
+
+int lessthan(vector<int> a, vector<int> b){
+    int c=0;
+    for (int i=0; i< a.size(); i++){
+        if (a.at(i) > b.at(i)){
+            return 0;
+        }
+        if (a.at(i) == b.at(i)){
+            c++;
+        }
+    }
+    if (c == a.size()) return 0;
+    return 1;
+}
+
+int mustBeBuffered(Message m, vector<int> tm, int my_port ){
+    for (int i=0; i< m.VP.size(); i++){
+        if (m.VP.at(i).P.port == my_port){
+            if (lessthan(tm, m.VP.at(i).T)){
+                return 0;
+            }
+        }
+    }
+    return 1;
 }
